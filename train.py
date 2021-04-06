@@ -102,6 +102,7 @@ def main():
     epoch_val_accuracy_average = []
 
     for epic in range(num_epochs):
+        print('starting epoch:', epic)
         
         # Put model in training mode
         model.train()

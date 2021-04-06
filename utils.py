@@ -9,9 +9,9 @@ def force_inside_img(x, patch_size, img_shape):
     if x_low < 0:
         x_up -= x_low
         x_low = 0
-    elif x_up > img_shape[1]:  # 2d, is [2] in github
-        x_low -= (x_up - img_shape[1])
-        x_up = img_shape[1]
+    elif x_up > img_shape[0]:  # 2d, is [2] in github
+        x_low -= (x_up - img_shape[0])
+        x_up = img_shape[0]
     return x_low, x_up
 
 
@@ -21,6 +21,7 @@ def extract_random_patch(img, mask, weight, verts, idx, subset, empty_interval=5
     # list available vertebrae
     # verts = np.unique(mask)  # passed from dataloader
     chosen_vert = verts[random.randint(1, len(verts) - 1)]  # avoid 0, background
+    print('chosen vert is:',chosen_vert)
 
     # create corresponde instance memory and ground truth - goes bottom to top
     # ins_memory = np.copy(mask)  # you can basically do this too and set others to 0
@@ -49,13 +50,27 @@ def extract_random_patch(img, mask, weight, verts, idx, subset, empty_interval=5
     else:
         # indices = np.nonzero(mask == chosen_vert)
         indices = np.nonzero(mask[:,:,chosen_vert])
-        lower = [np.min(i) for i in indices]
-        upper = [np.max(i) for i in indices]
+        try:  # DEBUG for empty masks breaking lower/upper
+            lower = [np.min(i) for i in indices]
+            upper = [np.max(i) for i in indices]
+        except ValueError:  # log it and just use the empty case
+            print('vertebrae',chosen_vert,'does not have nonzero indices')
+            patch_center = [np.random.randint(0, s) for s in img.shape]
+            x = patch_center[0]  # should be right... x is [0] (height)
+            y = patch_center[1]
+
+        # for instance memory
+        gt = np.copy(mask)  # will modify later
+        flag_empty = True
+
+        # lower = [np.min(i) for i in indices]
+        # upper = [np.max(i) for i in indices]
         # random center of patch
         x = random.randint(lower[0], upper[0])  # should be right... x is [0] (height)
         y = random.randint(lower[1], upper[1])
 
     # force random patches' range within the image
+    print('img.shape is:',img.shape)
     x_low, x_up = force_inside_img(x, patch_size, img.shape)
     y_low, y_up = force_inside_img(y, patch_size, img.shape)
 
@@ -84,10 +99,10 @@ def extract_random_patch(img, mask, weight, verts, idx, subset, empty_interval=5
         if np.random.rand() > 0.5:
             img_patch = gaussian_noise(img_patch)
 
-        # 50% random crop along z-axis
-        if np.random.rand() > 0.5:
-            img_patch, ins_patch, gt_patch, weight_patch = random_crop(img_patch, ins_patch, gt_patch,
-                                                                       weight_patch)
+        # 50% random crop along z-axis  # meh it's 128x128 anyways.
+        # if np.random.rand() > 0.5:
+            # img_patch, ins_patch, gt_patch, weight_patch = random_crop(img_patch, ins_patch, gt_patch,
+                                                                    #    weight_patch)
 
     # decide label of completeness(partial or complete)
     vol = np.count_nonzero(gt == 1)
