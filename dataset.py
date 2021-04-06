@@ -34,7 +34,7 @@ class SegmentationDataset(Dataset):
     def __getitem__(self, idx):
         # print('dataloader going through number',idx)
         idir = os.path.join(self.data_dir, str(idx))  # data/train/0 etc
-        print('dataloader looking in idir:',idir)
+        # print('dataloader looking in idir:',idir)
         
         allfiles = list(os.listdir(idir))
         allfiles.sort()

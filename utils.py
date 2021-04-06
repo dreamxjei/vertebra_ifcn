@@ -9,9 +9,9 @@ def force_inside_img(x, patch_size, img_shape):
     if x_low < 0:
         x_up -= x_low
         x_low = 0
-    elif x_up > img_shape[0]:  # 2d, is [2] in github
-        x_low -= (x_up - img_shape[0])
-        x_up = img_shape[0]
+    elif x_up > img_shape:  # 2d, is img_shape[2] in github, hopefully taken care of in prev step
+        x_low -= (x_up - img_shape)
+        x_up = img_shape
     return x_low, x_up
 
 
@@ -21,7 +21,7 @@ def extract_random_patch(img, mask, weight, verts, idx, subset, empty_interval=5
     # list available vertebrae
     # verts = np.unique(mask)  # passed from dataloader
     chosen_vert = verts[random.randint(1, len(verts) - 1)]  # avoid 0, background
-    print('chosen vert is:',chosen_vert)
+    # print('chosen vert is:',chosen_vert)
 
     # create corresponde instance memory and ground truth - goes bottom to top
     # ins_memory = np.copy(mask)  # you can basically do this too and set others to 0
@@ -70,12 +70,13 @@ def extract_random_patch(img, mask, weight, verts, idx, subset, empty_interval=5
         y = random.randint(lower[1], upper[1])
 
     # force random patches' range within the image
-    print('img.shape is:',img.shape)
-    x_low, x_up = force_inside_img(x, patch_size, img.shape)
-    y_low, y_up = force_inside_img(y, patch_size, img.shape)
+    # print('img.shape is:',img.shape)
+    x_low, x_up = force_inside_img(x, patch_size, img.shape[0])
+    y_low, y_up = force_inside_img(y, patch_size, img.shape[1])
 
     # crop the patch
     img_patch = img[x_low:x_up, y_low:y_up]
+    # print('img_patch size is:',np.shape(img_patch))  # should always be 128 128 3
     ins_patch = ins_memory[x_low:x_up, y_low:y_up, :]
     gt_patch = gt[x_low:x_up, y_low:y_up, :]
     weight_patch = weight[x_low:x_up, y_low:y_up, :]
