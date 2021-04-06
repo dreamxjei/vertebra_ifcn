@@ -1,2 +1,2 @@
 # vertebra_ifcn
-ifcn implementation for 2d x-rays
+ifcn implementation for 2d x-rays. unfinished!
